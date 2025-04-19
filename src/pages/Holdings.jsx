@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ethers } from 'ethers';
+import { JsonRpcProvider, Contract, formatEther, formatUnits } from 'ethers';
 import axios from 'axios';
 import HoldingsTable from '../components/HoldingsTable';
 
-const AVAX_ADDRESS = '0x0000000000000000000000000000000000000000';
 const TOKEN_ADDRESS = '0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7';
 const WALLET_ADDRESSES = [
   '0xCBE1baAE2EF74ffc67062B337aD2e04A02ed9832'
 ];
-
 const RPC_URL = 'https://api.avax.network/ext/bc/C/rpc';
 
 export default function Holdings() {
@@ -19,13 +17,14 @@ export default function Holdings() {
   }, []);
 
   async function fetchHoldings() {
-    const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+    const provider = new JsonRpcProvider(RPC_URL);
     const prices = await fetchPrices();
     let allHoldings = [];
 
     for (const wallet of WALLET_ADDRESSES) {
+      // Fetch AVAX balance
       const avaxBalance = await provider.getBalance(wallet);
-      const avaxFormatted = ethers.utils.formatEther(avaxBalance);
+      const avaxFormatted = formatEther(avaxBalance);
       allHoldings.push({
         wallet,
         symbol: 'AVAX',
@@ -33,13 +32,14 @@ export default function Holdings() {
         usdValue: `$${(avaxFormatted * prices.avax).toFixed(2)}`
       });
 
-      const tokenContract = new ethers.Contract(TOKEN_ADDRESS, [
+      // Fetch Token balance
+      const tokenContract = new Contract(TOKEN_ADDRESS, [
         "function decimals() view returns (uint8)",
         "function balanceOf(address) view returns (uint)"
       ], provider);
       const decimals = await tokenContract.decimals();
       const tokenBalance = await tokenContract.balanceOf(wallet);
-      const tokenFormatted = ethers.utils.formatUnits(tokenBalance, decimals);
+      const tokenFormatted = formatUnits(tokenBalance, decimals);
       allHoldings.push({
         wallet,
         symbol: 'AXT',
@@ -54,7 +54,7 @@ export default function Holdings() {
   async function fetchPrices() {
     const avaxPriceReq = axios.get('https://api.coingecko.com/api/v3/simple/price?ids=avalanche-2&vs_currencies=usd');
     const tokenPriceReq = axios.get('https://api.coingecko.com/api/v3/simple/token_price/avalanche?contract_addresses=0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7&vs_currencies=usd');
-    
+
     const [avaxRes, tokenRes] = await Promise.all([avaxPriceReq, tokenPriceReq]);
     return {
       avax: avaxRes.data['avalanche-2'].usd,
