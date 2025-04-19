@@ -15,7 +15,7 @@ const TOKENS = [
 ];
 
 const WALLET_ADDRESSES = [
-  '0xCBE1baAE2EF74ffc67062B337aD2e04A02ed9832'
+  '0x289B5C1f2727B04BE8127C4F7e5B0380dBbB5f2c'
 ];
 
 const RPC_URL = 'https://api.avax.network/ext/bc/C/rpc';
