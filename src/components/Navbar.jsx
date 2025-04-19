@@ -6,7 +6,7 @@ export default function Navbar() {
     <nav className="bg-white dark:bg-gray-800 shadow">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2">
-          <img src="/axhold-logo.png" alt="Axhold Logo" className="h-12" /> 
+          <img src="/axhold-logo.png" alt="Axhold Logo" className="h-9" /> 
           {/* Removed text */}
         </Link>
         <div className="flex items-center space-x-4">
