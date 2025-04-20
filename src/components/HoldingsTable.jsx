@@ -7,7 +7,7 @@ export default function HoldingsTable({ holdings }) {
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Wallet</th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Token</th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Balance</th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">USD Value</th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Value (AVAX)</th>
           </tr>
         </thead>
         <tbody>
@@ -17,7 +17,7 @@ export default function HoldingsTable({ holdings }) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.wallet}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.symbol}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.balance}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">{h.usdValue || '$0.00'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">{h.avaxValue || '0.0000'} AVAX</td>
               </tr>
             ))
           ) : (

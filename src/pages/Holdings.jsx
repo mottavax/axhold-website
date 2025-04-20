@@ -6,11 +6,11 @@ import HoldingsTable from '../components/HoldingsTable';
 const TOKENS = [
   {
     address: '0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7',
-    symbol: 'KET'
+    symbol: 'AXT'
   },
   {
     address: '0x0f669808d88B2b0b3D23214DCD2a1cc6A8B1B5cd',
-    symbol: 'BLUB'
+    symbol: 'NEW'
   }
 ];
 
@@ -41,7 +41,7 @@ export default function Holdings() {
             wallet,
             symbol: 'AVAX',
             balance: parseFloat(avaxFormatted).toFixed(4),
-            usdValue: `$${(avaxFormatted * prices.avax).toFixed(2)}`
+            avaxValue: parseFloat(avaxFormatted).toFixed(4)
           });
 
           for (const token of TOKENS) {
@@ -54,11 +54,15 @@ export default function Holdings() {
               const tokenBalance = await tokenContract.balanceOf(wallet);
               const tokenFormatted = tokenBalance ? formatUnits(tokenBalance, decimals) : "0.00";
 
+              const tokenUSDPrice = prices[token.address.toLowerCase()] || 0;
+              const avaxUSDPrice = prices.avax || 1;
+              const tokenValueInAvax = avaxUSDPrice > 0 ? (tokenFormatted * tokenUSDPrice) / avaxUSDPrice : 0;
+
               allHoldings.push({
                 wallet,
                 symbol: token.symbol,
                 balance: parseFloat(tokenFormatted).toFixed(2),
-                usdValue: `$${(tokenFormatted * (prices[token.address.toLowerCase()] || 0)).toFixed(2)}`
+                avaxValue: tokenValueInAvax.toFixed(4)
               });
             } catch (tokenError) {
               console.error(`Error fetching token balance for ${token.symbol}:`, tokenError);
