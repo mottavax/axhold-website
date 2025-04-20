@@ -10,7 +10,8 @@ const TOKENS = [
 ];
 
 const WALLET_ADDRESSES = [
-  '0x289B5C1f2727B04BE8127C4F7e5B0380dBbB5f2c'
+  '0x289B5C1f2727B04BE8127C4F7e5B0380dBbB5f2c',
+  '0xCBE1baAE2EF74ffc67062B337aD2e04A02ed9832'
 ];
 
 const RPC_URL = 'https://api.avax.network/ext/bc/C/rpc';
@@ -18,6 +19,8 @@ const RPC_URL = 'https://api.avax.network/ext/bc/C/rpc';
 export default function Holdings() {
   const [holdings, setHoldings] = useState([]);
   const [totals, setTotals] = useState({ totalTokens: 0, totalAvaxValue: 0 });
+  const [sortField, setSortField] = useState('valueAvax');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   useEffect(() => {
     fetchHoldings();
@@ -49,7 +52,8 @@ export default function Holdings() {
               symbol: tokenInfo.symbol || 'UNKNOWN',
               balance: formattedBalance,
               valueAvax: (formattedBalance * (tokenInfo.priceInAvax || 0)),
-              marketCap: tokenInfo.marketCap ? `$${(tokenInfo.marketCap/1e6).toFixed(2)}M` : 'N/A'
+              marketCap: tokenInfo.marketCap ? `$${(tokenInfo.marketCap/1e6).toFixed(2)}M` : 'N/A',
+              priceChange24h: tokenInfo.priceChange24h || 0
             });
           } catch (tokenError) {
             console.error(`Error fetching token balance:`, tokenError);
@@ -57,11 +61,9 @@ export default function Holdings() {
         }
       }
 
-      // Calculate totals
-      const tokenTypesHeld = allHoldings.length;  // number of different tokens
-      const totalAvaxValue = allHoldings.reduce((sum, item) => sum + item.valueAvax, 0);
-
       setHoldings(allHoldings);
+      const tokenTypesHeld = allHoldings.length;
+      const totalAvaxValue = allHoldings.reduce((sum, item) => sum + item.valueAvax, 0);
       setTotals({ totalTokens: tokenTypesHeld, totalAvaxValue });
     } catch (error) {
       console.error('Error fetching holdings:', error);
@@ -82,7 +84,8 @@ export default function Holdings() {
             name: pair.baseToken.name,
             symbol: pair.baseToken.symbol,
             priceInAvax: parseFloat(pair.priceNative),
-            marketCap: pair.fdv
+            marketCap: pair.fdv,
+            priceChange24h: pair.priceChange?.h24 || 0
           };
         }
       } catch (error) {
@@ -93,11 +96,31 @@ export default function Holdings() {
     return tokenInfoMap;
   }
 
+  function handleSort(field) {
+    const order = (sortField === field && sortOrder === 'asc') ? 'desc' : 'asc';
+    setSortField(field);
+    setSortOrder(order);
+    const sortedHoldings = [...holdings].sort((a, b) => {
+      if (order === 'asc') {
+        return a[field] > b[field] ? 1 : -1;
+      } else {
+        return a[field] < b[field] ? 1 : -1;
+      }
+    });
+    setHoldings(sortedHoldings);
+  }
+
   return (
     <section>
       <h1 className="text-3xl font-bold mb-6">Live Holdings</h1>
+      <button
+        onClick={fetchHoldings}
+        className="mb-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        🔄 Refresh Holdings
+      </button>
       <TotalsSection totalTokens={totals.totalTokens} totalAvaxValue={totals.totalAvaxValue} />
-      <HoldingsTable holdings={holdings} />
+      <HoldingsTable holdings={holdings} onSort={handleSort} />
     </section>
   );
 }
