@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { JsonRpcProvider, Contract, formatUnits } from 'ethers';
 import axios from 'axios';
 import HoldingsTable from '../components/HoldingsTable';
-import HoldingsChart from '../components/HoldingsChart';
 import TotalsSection from '../components/TotalsSection';
 
 const TOKENS = [
@@ -118,11 +117,6 @@ export default function Holdings() {
     ? [...holdings].sort((a, b) => b.valueAvax - a.valueAvax).slice(0, 5)
     : holdings;
 
-  const chartData = filteredHoldings.map(h => ({
-    name: h.symbol,
-    value: h.valueAvax
-  }));
-
   return (
     <section>
       <h1 className="text-3xl font-bold mb-6">Live Holdings</h1>
@@ -145,7 +139,6 @@ export default function Holdings() {
         </div>
       </div>
       <TotalsSection totalTokens={totals.totalTokens} totalAvaxValue={totals.totalAvaxValue} />
-      <HoldingsChart data={chartData} />
       <HoldingsTable holdings={filteredHoldings} onSort={handleSort} />
     </section>
   );
