@@ -6,11 +6,11 @@ import HoldingsTable from '../components/HoldingsTable';
 const TOKENS = [
   {
     address: '0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7',
-    symbol: 'AXT'
+    symbol: 'KET'
   },
   {
     address: '0x0f669808d88B2b0b3D23214DCD2a1cc6A8B1B5cd',
-    symbol: 'NEW'
+    symbol: 'BLUB'
   }
 ];
 
