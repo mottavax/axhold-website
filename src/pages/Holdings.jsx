@@ -58,11 +58,11 @@ export default function Holdings() {
       }
 
       // Calculate totals
-      const totalTokens = allHoldings.reduce((sum, item) => sum + item.balance, 0);
+      const tokenTypesHeld = allHoldings.length;  // number of different tokens
       const totalAvaxValue = allHoldings.reduce((sum, item) => sum + item.valueAvax, 0);
 
       setHoldings(allHoldings);
-      setTotals({ totalTokens, totalAvaxValue });
+      setTotals({ totalTokens: tokenTypesHeld, totalAvaxValue });
     } catch (error) {
       console.error('Error fetching holdings:', error);
     }
