@@ -1,6 +1,6 @@
 export default function HoldingsTable({ holdings }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto w-full">
       <table className="min-w-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow">
         <thead className="bg-gray-100 dark:bg-gray-700">
           <tr>
@@ -17,8 +17,8 @@ export default function HoldingsTable({ holdings }) {
               <tr key={index} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.wallet}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.name} ({h.symbol})</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">{h.balance}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">{h.valueAvax} AVAX</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">{h.balance.toFixed(2)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">{h.valueAvax.toFixed(4)} AVAX</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.marketCap}</td>
               </tr>
             ))

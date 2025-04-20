@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -20,6 +21,10 @@ function App() {
     setDarkMode(!darkMode);
   };
 
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
   return (
     <Router>
       <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -32,7 +37,15 @@ function App() {
                 className="h-8"
               />
             </Link>
-            <nav className="flex space-x-4">
+            <div className="md:hidden">
+              <button
+                onClick={toggleMenu}
+                className="text-gray-800 dark:text-white focus:outline-none text-2xl"
+              >
+                ☰
+              </button>
+            </div>
+            <nav className="hidden md:flex space-x-6">
               <Link to="/" className="text-gray-800 dark:text-white hover:underline">Home</Link>
               <Link to="/holdings" className="text-gray-800 dark:text-white hover:underline">Holdings 💎</Link>
               <button
@@ -43,6 +56,18 @@ function App() {
               </button>
             </nav>
           </div>
+          {menuOpen && (
+            <div className="md:hidden bg-white dark:bg-gray-800 px-6 py-4 space-y-4">
+              <Link to="/" className="block text-gray-800 dark:text-white" onClick={toggleMenu}>Home</Link>
+              <Link to="/holdings" className="block text-gray-800 dark:text-white" onClick={toggleMenu}>Holdings 💎</Link>
+              <button
+                onClick={() => { toggleDarkMode(); toggleMenu(); }}
+                className="block text-gray-800 dark:text-white focus:outline-none"
+              >
+                {darkMode ? '☀️ Light' : '🌙 Dark'}
+              </button>
+            </div>
+          )}
         </header>
 
         <main className="flex-grow container mx-auto px-6 py-8">
