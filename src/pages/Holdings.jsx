@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { JsonRpcProvider, Contract, formatEther, formatUnits } from 'ethers';
+import { JsonRpcProvider, Contract, formatUnits } from 'ethers';
 import axios from 'axios';
 import HoldingsTable from '../components/HoldingsTable';
 
@@ -25,26 +25,9 @@ export default function Holdings() {
     try {
       const provider = new JsonRpcProvider(RPC_URL);
       let allHoldings = [];
-
-      // Fetch token data from DEX Screener
       const tokenData = await fetchDexTokenData();
 
       for (const wallet of WALLET_ADDRESSES) {
-        // Fetch AVAX Balance
-        const avaxBalance = await provider.getBalance(wallet);
-        const avaxFormatted = avaxBalance ? formatEther(avaxBalance) : "0.00";
-
-        allHoldings.push({
-          wallet,
-          name: 'Avalanche',
-          symbol: 'AVAX',
-          balance: parseFloat(avaxFormatted).toFixed(4),
-          valueAvax: parseFloat(avaxFormatted).toFixed(4),
-          marketCap: 'N/A',
-          logoURI: 'https://cryptologos.cc/logos/avalanche-avax-logo.png' // Public AVAX logo
-        });
-
-        // Fetch token balances
         for (const tokenAddress of TOKENS) {
           try {
             const tokenContract = new Contract(tokenAddress, [
@@ -64,8 +47,7 @@ export default function Holdings() {
               symbol: tokenInfo.symbol || 'UNKNOWN',
               balance: parseFloat(formattedBalance).toFixed(2),
               valueAvax: (formattedBalance * (tokenInfo.priceInAvax || 0)).toFixed(4),
-              marketCap: tokenInfo.marketCap ? `$${(tokenInfo.marketCap/1e6).toFixed(2)}M` : 'N/A',
-              logoURI: tokenInfo.logoURI || ''
+              marketCap: tokenInfo.marketCap ? `$${(tokenInfo.marketCap/1e6).toFixed(2)}M` : 'N/A'
             });
           } catch (tokenError) {
             console.error(`Error fetching token balance:`, tokenError);
@@ -86,15 +68,14 @@ export default function Holdings() {
       try {
         const url = `https://api.dexscreener.com/latest/dex/tokens/${address}`;
         const response = await axios.get(url);
-
         const pair = response.data.pairs[0];
+
         if (pair) {
           tokenInfoMap[address.toLowerCase()] = {
             name: pair.baseToken.name,
             symbol: pair.baseToken.symbol,
             priceInAvax: parseFloat(pair.priceNative),
-            marketCap: pair.fdv,
-            logoURI: pair.baseToken.logoURI || ''
+            marketCap: pair.fdv
           };
         }
       } catch (error) {

@@ -16,10 +16,7 @@ export default function HoldingsTable({ holdings }) {
             holdings.map((h, index) => (
               <tr key={index} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.wallet}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm flex items-center space-x-2">
-                  {h.logoURI && <img src={h.logoURI} alt="" className="h-6 w-6 rounded-full" />}
-                  <span>{h.name} ({h.symbol})</span>
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">{h.name} ({h.symbol})</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.balance}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.valueAvax} AVAX</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{h.marketCap}</td>
