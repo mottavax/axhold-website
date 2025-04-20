@@ -4,14 +4,8 @@ import axios from 'axios';
 import HoldingsTable from '../components/HoldingsTable';
 
 const TOKENS = [
-  {
-    address: '0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7',
-    symbol: 'AXT'
-  },
-  {
-    address: '0x0f669808d88B2b0b3D23214DCD2a1cc6A8B1B5cd',
-    symbol: 'NEW'
-  }
+  '0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7',
+  '0x0f669808d88B2b0b3D23214DCD2a1cc6A8B1B5cd'
 ];
 
 const WALLET_ADDRESSES = [
@@ -30,75 +24,85 @@ export default function Holdings() {
   async function fetchHoldings() {
     try {
       const provider = new JsonRpcProvider(RPC_URL);
-      const prices = await fetchPrices();
       let allHoldings = [];
 
+      // Fetch token data from DEX Screener
+      const tokenData = await fetchDexTokenData();
+
       for (const wallet of WALLET_ADDRESSES) {
-        try {
-          const avaxBalance = await provider.getBalance(wallet);
-          const avaxFormatted = avaxBalance ? formatEther(avaxBalance) : "0.00";
-          allHoldings.push({
-            wallet,
-            symbol: 'AVAX',
-            balance: parseFloat(avaxFormatted).toFixed(4),
-            avaxValue: parseFloat(avaxFormatted).toFixed(4)
-          });
+        // Fetch AVAX Balance
+        const avaxBalance = await provider.getBalance(wallet);
+        const avaxFormatted = avaxBalance ? formatEther(avaxBalance) : "0.00";
 
-          for (const token of TOKENS) {
-            try {
-              const tokenContract = new Contract(token.address, [
-                "function decimals() view returns (uint8)",
-                "function balanceOf(address) view returns (uint)"
-              ], provider);
-              const decimals = await tokenContract.decimals();
-              const tokenBalance = await tokenContract.balanceOf(wallet);
-              const tokenFormatted = tokenBalance ? formatUnits(tokenBalance, decimals) : "0.00";
+        allHoldings.push({
+          wallet,
+          name: 'Avalanche',
+          symbol: 'AVAX',
+          balance: parseFloat(avaxFormatted).toFixed(4),
+          valueAvax: parseFloat(avaxFormatted).toFixed(4),
+          marketCap: 'N/A',
+          logoURI: 'https://cryptologos.cc/logos/avalanche-avax-logo.png' // Public AVAX logo
+        });
 
-              const tokenUSDPrice = prices[token.address.toLowerCase()] || 0;
-              const avaxUSDPrice = prices.avax || 1;
-              const tokenValueInAvax = avaxUSDPrice > 0 ? (tokenFormatted * tokenUSDPrice) / avaxUSDPrice : 0;
+        // Fetch token balances
+        for (const tokenAddress of TOKENS) {
+          try {
+            const tokenContract = new Contract(tokenAddress, [
+              "function decimals() view returns (uint8)",
+              "function balanceOf(address) view returns (uint)"
+            ], provider);
 
-              allHoldings.push({
-                wallet,
-                symbol: token.symbol,
-                balance: parseFloat(tokenFormatted).toFixed(2),
-                avaxValue: tokenValueInAvax.toFixed(4)
-              });
-            } catch (tokenError) {
-              console.error(`Error fetching token balance for ${token.symbol}:`, tokenError);
-            }
+            const decimals = await tokenContract.decimals();
+            const balance = await tokenContract.balanceOf(wallet);
+            const formattedBalance = balance ? formatUnits(balance, decimals) : "0.00";
+
+            const tokenInfo = tokenData[tokenAddress.toLowerCase()] || {};
+
+            allHoldings.push({
+              wallet,
+              name: tokenInfo.name || 'Unknown',
+              symbol: tokenInfo.symbol || 'UNKNOWN',
+              balance: parseFloat(formattedBalance).toFixed(2),
+              valueAvax: (formattedBalance * (tokenInfo.priceInAvax || 0)).toFixed(4),
+              marketCap: tokenInfo.marketCap ? `$${(tokenInfo.marketCap/1e6).toFixed(2)}M` : 'N/A',
+              logoURI: tokenInfo.logoURI || ''
+            });
+          } catch (tokenError) {
+            console.error(`Error fetching token balance:`, tokenError);
           }
-        } catch (walletError) {
-          console.error(`Error fetching AVAX balance for ${wallet}:`, walletError);
         }
       }
 
       setHoldings(allHoldings);
     } catch (error) {
-      console.error("Error fetching holdings:", error);
-      setHoldings([]);
+      console.error('Error fetching holdings:', error);
     }
   }
 
-  async function fetchPrices() {
-    try {
-      const avaxPriceReq = axios.get('https://api.coingecko.com/api/v3/simple/price?ids=avalanche-2&vs_currencies=usd');
-      const tokenPriceReq = axios.get('https://api.coingecko.com/api/v3/simple/token_price/avalanche?contract_addresses=0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7,0x0f669808d88B2b0b3D23214DCD2a1cc6A8B1B5cd&vs_currencies=usd');
+  async function fetchDexTokenData() {
+    const tokenInfoMap = {};
 
-      const [avaxRes, tokenRes] = await Promise.all([avaxPriceReq, tokenPriceReq]);
-      return {
-        avax: avaxRes.data['avalanche-2'].usd,
-        '0xffff003a6bad9b743d658048742935fffe2b6ed7': tokenRes.data['0xffff003a6bad9b743d658048742935fffe2b6ed7']?.usd || 0,
-        '0x0f669808d88b2b0b3d23214dcd2a1cc6a8b1b5cd': tokenRes.data['0x0f669808d88b2b0b3d23214dcd2a1cc6a8b1b5cd']?.usd || 0
-      };
-    } catch (priceError) {
-      console.error("Error fetching prices:", priceError);
-      return {
-        avax: 0,
-        '0xffff003a6bad9b743d658048742935fffe2b6ed7': 0,
-        '0x0f669808d88b2b0b3d23214dcd2a1cc6a8b1b5cd': 0
-      };
+    for (const address of TOKENS) {
+      try {
+        const url = `https://api.dexscreener.com/latest/dex/tokens/${address}`;
+        const response = await axios.get(url);
+
+        const pair = response.data.pairs[0];
+        if (pair) {
+          tokenInfoMap[address.toLowerCase()] = {
+            name: pair.baseToken.name,
+            symbol: pair.baseToken.symbol,
+            priceInAvax: parseFloat(pair.priceNative),
+            marketCap: pair.fdv,
+            logoURI: pair.baseToken.logoURI || ''
+          };
+        }
+      } catch (error) {
+        console.error(`Error fetching DEX Screener data for token ${address}:`, error);
+      }
     }
+
+    return tokenInfoMap;
   }
 
   return (
