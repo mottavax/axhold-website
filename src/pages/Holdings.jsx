@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { JsonRpcProvider, Contract, formatUnits } from 'ethers';
 import axios from 'axios';
 import HoldingsTable from '../components/HoldingsTable';
+import TotalsSection from '../components/TotalsSection';
 
 const TOKENS = [
   '0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7',
@@ -16,6 +17,7 @@ const RPC_URL = 'https://api.avax.network/ext/bc/C/rpc';
 
 export default function Holdings() {
   const [holdings, setHoldings] = useState([]);
+  const [totals, setTotals] = useState({ totalTokens: 0, totalAvaxValue: 0 });
 
   useEffect(() => {
     fetchHoldings();
@@ -37,7 +39,7 @@ export default function Holdings() {
 
             const decimals = await tokenContract.decimals();
             const balance = await tokenContract.balanceOf(wallet);
-            const formattedBalance = balance ? formatUnits(balance, decimals) : "0.00";
+            const formattedBalance = balance ? parseFloat(formatUnits(balance, decimals)) : 0;
 
             const tokenInfo = tokenData[tokenAddress.toLowerCase()] || {};
 
@@ -45,8 +47,8 @@ export default function Holdings() {
               wallet,
               name: tokenInfo.name || 'Unknown',
               symbol: tokenInfo.symbol || 'UNKNOWN',
-              balance: parseFloat(formattedBalance).toFixed(2),
-              valueAvax: (formattedBalance * (tokenInfo.priceInAvax || 0)).toFixed(4),
+              balance: formattedBalance,
+              valueAvax: (formattedBalance * (tokenInfo.priceInAvax || 0)),
               marketCap: tokenInfo.marketCap ? `$${(tokenInfo.marketCap/1e6).toFixed(2)}M` : 'N/A'
             });
           } catch (tokenError) {
@@ -55,7 +57,12 @@ export default function Holdings() {
         }
       }
 
+      // Calculate totals
+      const totalTokens = allHoldings.reduce((sum, item) => sum + item.balance, 0);
+      const totalAvaxValue = allHoldings.reduce((sum, item) => sum + item.valueAvax, 0);
+
       setHoldings(allHoldings);
+      setTotals({ totalTokens, totalAvaxValue });
     } catch (error) {
       console.error('Error fetching holdings:', error);
     }
@@ -89,6 +96,7 @@ export default function Holdings() {
   return (
     <section>
       <h1 className="text-3xl font-bold mb-6">Live Holdings</h1>
+      <TotalsSection totalTokens={totals.totalTokens} totalAvaxValue={totals.totalAvaxValue} />
       <HoldingsTable holdings={holdings} />
     </section>
   );
