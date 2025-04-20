@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { JsonRpcProvider, Contract, formatUnits } from 'ethers';
 import axios from 'axios';
 import HoldingsTable from '../components/HoldingsTable';
+import HoldingsChart from '../components/HoldingsChart';
 import TotalsSection from '../components/TotalsSection';
 
 const TOKENS = [
@@ -21,9 +22,12 @@ export default function Holdings() {
   const [totals, setTotals] = useState({ totalTokens: 0, totalAvaxValue: 0 });
   const [sortField, setSortField] = useState('valueAvax');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     fetchHoldings();
+    const interval = setInterval(fetchHoldings, 300000); // 5 mins
+    return () => clearInterval(interval);
   }, []);
 
   async function fetchHoldings() {
@@ -110,17 +114,39 @@ export default function Holdings() {
     setHoldings(sortedHoldings);
   }
 
+  const filteredHoldings = filter === 'top5'
+    ? [...holdings].sort((a, b) => b.valueAvax - a.valueAvax).slice(0, 5)
+    : holdings;
+
+  const chartData = filteredHoldings.map(h => ({
+    name: h.symbol,
+    value: h.valueAvax
+  }));
+
   return (
     <section>
       <h1 className="text-3xl font-bold mb-6">Live Holdings</h1>
-      <button
-        onClick={fetchHoldings}
-        className="mb-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        🔄 Refresh Holdings
-      </button>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div className="flex gap-4">
+          <button
+            onClick={fetchHoldings}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            🔄 Refresh Holdings
+          </button>
+          <select
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="py-2 px-4 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          >
+            <option value="all">All Tokens</option>
+            <option value="top5">Top 5 Tokens</option>
+          </select>
+        </div>
+      </div>
       <TotalsSection totalTokens={totals.totalTokens} totalAvaxValue={totals.totalAvaxValue} />
-      <HoldingsTable holdings={holdings} onSort={handleSort} />
+      <HoldingsChart data={chartData} />
+      <HoldingsTable holdings={filteredHoldings} onSort={handleSort} />
     </section>
   );
 }
